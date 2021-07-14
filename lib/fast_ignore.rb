@@ -16,6 +16,7 @@ require_relative './fast_ignore/file_root'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/unmatchable_rule'
 require_relative './fast_ignore/shebang_rule'
+require_relative './fast_ignore/gitconfig_parser'
 
 class FastIgnore
   class Error < StandardError; end

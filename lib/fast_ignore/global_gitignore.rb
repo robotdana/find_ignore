@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-
+require 'pry'
 class FastIgnore
   module GlobalGitignore
     class << self
@@ -17,11 +17,11 @@ class FastIgnore
         return unless config_path
         return unless ::File.exist?(config_path)
 
-        ignore_path = ::File.readlines(config_path).find { |l| l.sub!(/\A\s*excludesfile\s*=/, '') }
+        ignore_path = config_value(config_path)
         return unless ignore_path
 
         ignore_path.strip!
-        return ignore_path if ignore_path.empty? # don't expand path in this case
+        return '' if ignore_path.empty? # don't expand path in this case
 
         ::File.expand_path(ignore_path)
       end
@@ -35,6 +35,20 @@ class FastIgnore
           ::File.expand_path('git/ignore', xdg_config_home)
         else
           ::File.expand_path('~/.config/git/ignore')
+        end
+      end
+
+      def config_value(path)
+        puts ::File.readlines(path).inspect
+        ::File.read(path).find do |line|
+          if line.sub!(/\A\s*excludesfile\s*=\s*/, '')
+            # quoted value or unquoted value (value within quote is allowed to be preceded by an odd number of backslashes)
+            # quotes can include comment characters, unquoted strings can't.
+            # quotes are just another type of escaping that can be introduced at any time
+            # single quotes are literal
+            line.scan(/(?:"(?<quoted>(?:[^"]|\\(?:\\\\)*")*")|(?<unquoted>[^;#]|\\(?:\\\\)*"))/) { |quoted, unquoted| }
+            return match[0] # intentional early return from find
+          end
         end
       end
 
